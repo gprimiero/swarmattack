@@ -1,0 +1,9 @@
+-I/Library/Frameworks/QGLViewer.framework/Headers
+-I/System/Library/Frameworks/GLUT.framework/Headers
+-D_GRAPHICS_
+-DQT_WIDGETS_LIB
+-DQT_GUI_LIB
+-DQT_CORE_LIB
+-o
+/Users/eliotuci/Simulations/security/build/EXP/moc_first_exp.cpp
+/Users/eliotuci/Simulations/security/EXP/first_exp.h

@@ -1,0 +1,23 @@
+Number of Evolutionary Generations    = 1
+Number of Evaluations                 = 1
+Number of Iterations                  = 1000
+Number of Agents per Group            = 100
+Dump statistics every                 = 1
+Choose dir name where to dump data    = ../DATA/
+World dimension                       = 30
+Init Nb attacker                      = 5
+Init Nb explorer                      = 10
+Init Nb Zeros                         = 0
+Memory size                           = 10
+Threshold change knowledge            = 3
+Threshold acquire knowledge           = 3
+Agent step size                       = 3
+Communication range                   = 10
+Increasing_factor (Z)                 = 1.1
+Decreasing_factor (K)                 = 1
+Init_prob_change_knowldege            = 0.5
+
+-----------------------------------------------
+-	e n d   o f   p a r a m e t e r s         -
+-----------------------------------------------
+This is just a check at the end = 999

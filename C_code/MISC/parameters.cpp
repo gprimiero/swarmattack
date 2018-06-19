@@ -1,0 +1,185 @@
+#include "parameters.h"
+
+/* ---------------------------------------- */
+
+void Parameters::usage ( void )
+{
+  cerr << " Bad input format - Options are required \n"
+       << "-e evolutionary mode, the parameter -n and -s has to be specified  \n "
+       << "-v viewing mode, the parameter -n and -s has to be specified  \n "
+       << "-r evaluation mode, the parameter -n and -s has to be specified  \n "
+       << " -------------------------- \n"
+       << "-n requires a evolutionary run name \n "
+       << "-s requires a seed number different from zero."
+       << endl;
+  exit(EXIT_FAILURE);
+}
+
+/* ---------------------------------------- */
+
+char* Parameters::getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+  char ** itr = std::find(begin, end, option);
+  if (itr != end && ++itr != end)
+    {
+      return *itr;
+    }
+  else usage();
+  return 0;
+}
+
+/* ---------------------------------------- */
+
+bool Parameters::cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+  return std::find(begin, end, option) != end;
+}
+
+/* ---------------------------------------- */
+
+void Parameters::parse_command_line( int argc, char** argv )
+{
+  if( cmdOptionExists(argv, argv+argc, "-e") ||
+      cmdOptionExists(argv, argv+argc, "-v") ||
+      cmdOptionExists(argv, argv+argc, "-r") ){
+    switch(argv[1][1]) {
+    case 'e':
+      m_mode_evolution  = true;
+      m_mode_viewing    = false;
+      m_mode_evaluation = false;
+      break;
+    case 'v':
+      m_mode_evolution  = false;
+      m_mode_viewing    = true;
+      m_mode_evaluation = false;
+      break;
+    case 'r':
+      m_mode_evolution  = false;
+      m_mode_viewing    = false;
+      m_mode_evaluation = true;
+      break;
+    default:
+      usage();
+      break;
+    }
+    if(cmdOptionExists(argv, argv+argc, "-n")){
+      m_runName = getCmdOption(argv, argv + argc, "-n");
+      if ( m_runName.empty()  ) usage();
+    }
+    else usage();
+    if(cmdOptionExists(argv, argv+argc, "-s")){
+      m_rootSeed = atoi( getCmdOption(argv, argv + argc, "-s") );
+      if( m_rootSeed == 0 ) usage(); 
+    }
+    else usage();
+
+    if(cmdOptionExists(argv, argv+argc, "-p")){
+      init_prob_change_knowldege = atof( getCmdOption(argv, argv + argc, "-p") );
+      if( init_prob_change_knowldege > 1.0 ) usage();
+    }
+    //else usage();
+
+    if(cmdOptionExists(argv, argv+argc, "-i")){
+      increasing_factor = atof( getCmdOption(argv, argv + argc, "-i") );
+      if( increasing_factor < 1.0 ) usage(); 
+    }
+    //else usage();
+
+    if(cmdOptionExists(argv, argv+argc, "-d")){
+      decreasing_factor = atof( getCmdOption(argv, argv + argc, "-d") );
+      if( decreasing_factor > 1.0 ) usage();
+    }
+    //else usage();
+    
+  }
+  else usage();
+}
+
+/* ---------------------------------------- */
+
+void Parameters::read_run_parameter_file( /* const char *run_name */ ){
+  
+  ifstream I ("../MISC/init_run.txt");
+  if(!I)
+    {
+      cerr << "File for Run Parameters not found" <<endl;
+      exit(EXIT_FAILURE);
+    }
+  
+  /* ------------------------------- */
+  //Load parameters from init_run.txt
+  /* ------------------------------- */
+  m_nbMaxGenerations            = getInt('=', I);
+  m_nbMaxEvaluations            = getInt('=', I);
+  m_nbMaxIterations             = getInt('=', I);
+  m_nbAgentsPerGroup            = getInt('=', I);
+  m_dumpStatsEvery              = getInt('=', I);
+  getStr('=', I, m_statsFileDir );
+  m_worldDimensions.resize(2);
+  m_worldDimensions[0]          = getInt('=', I);
+  m_worldDimensions[1]          = m_worldDimensions[0];
+  m_initNbAttacker              = getInt('=', I);
+  m_initNbExplorer              = getInt('=', I);
+  m_initNbZeros                 = getInt('=', I);
+  m_memory_size                 = getInt('=', I);
+  m_threshold_change_knowledge  = getInt('=', I);
+  m_threshold_acquire_knowledge = getInt('=', I);
+  m_step_size                   = getInt('=', I);
+  m_comm_range                  = getInt('=', I);
+  increasing_factor             = getDouble('=', I);
+  decreasing_factor             = getDouble('=', I);
+  init_prob_change_knowldege    = getDouble('=', I);
+  /* ------------------------------- */
+  //End of loading parameters
+  /* ------------------------------- */
+}
+
+/* ---------------------------------------- */
+
+Parameters::Parameters( int argc, char** argv )
+{
+  read_run_parameter_file( ); //Open the first configuration file called init_run.txt  
+  parse_command_line( argc, argv );
+  m_currentGeneration = 0;
+  init_random_generator();
+}
+
+/* ---------------------------------------- */
+
+Parameters::~Parameters()
+{
+  GSL_randon_generator::free_generator( );
+}
+
+/* ---------------------------------------- */
+
+void Parameters::init_random_generator( void )
+{
+  GSL_randon_generator::init_generator( m_rootSeed );
+}
+
+/* ---------------------------------------- */
+
+void Parameters::dump_simulation_seed( void )
+{
+  //Create the Directory to save seed
+  //struct stat st = {0};
+  //if( stat (m_statsFileDir.c_str(), &st) == -1 ){
+  //mkdir(m_statsFileDir.c_str(), 0700 );
+  //}
+  std::string fileName = m_statsFileDir + m_runName + ".seed";
+  ofstream outfile ( fileName, ios::app);
+  outfile.setf(ios::fixed);
+  outfile << "m_rootSeed = " << m_rootSeed << endl;
+  outfile.close();
+}
+
+/* ---------------------------------------- */
+
+void Parameters::reset_seed( void )
+{
+    GSL_randon_generator::reset_seed( m_rootSeed );
+}
+
+/* ---------------------------------------- */
+/* ---------------------------------------- */

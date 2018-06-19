@@ -1,0 +1,93 @@
+cmake_minimum_required(VERSION 3.8.2)
+
+# CMAKE_PREFIX_PATH=/Users/eliotuci/Qt/5.9.1/clang_64/
+
+SET ( CMAKE_PREFIX_PATH /Users/eliotuci/Qt/5.9.1/clang_64/)
+SET ( EXECUTABLE dsim )
+
+add_definitions(-D_GRAPHICS_)
+
+
+SET(CMAKE_CXX_STANDARD 14)
+SET(  QT_USE_QTXML TRUE )
+
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/modules)
+
+MESSAGE( STATUS "CMAKE_MODULE_PATH:         " ${CMAKE_MODULE_PATH} )
+
+SET(CMAKE_CXX_STANDARD 14)
+SET(  QT_USE_QTXML TRUE )
+
+FIND_PACKAGE(QGLViewer REQUIRED)
+INCLUDE_DIRECTORIES(${QGLVIEWER_INCLUDE_DIR})
+
+FIND_PACKAGE( MPI )
+
+FIND_PACKAGE( Qt5Xml REQUIRED )
+FIND_PACKAGE( Qt5Widgets REQUIRED)
+FIND_PACKAGE( Qt5Core REQUIRED)
+FIND_PACKAGE( Qt5Gui REQUIRED)
+FIND_PACKAGE( Qt5OpenGL REQUIRED)
+
+FIND_PACKAGE( Qt5 COMPONENTS OpenGL Gui Xml core REQUIRED )
+FIND_PACKAGE ( GLUT REQUIRED)
+
+FIND_PACKAGE(OpenGL REQUIRED)
+INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE} )  
+
+
+if(OpenGL_FOUND) # never true, but printed as true
+    link_directories(${OpenGL_LIBRARY_DIRS})
+    include_directories(${OpenGL_INCLUDE_DIR})
+endif(OpenGL_FOUND)
+
+if(GLUT_FOUND)
+    link_directories(${GLUT_LIBRARY_DIR})
+    include_directories(${GLUT_INCLUDE_DIR})
+endif(GLUT_FOUND)
+
+SET( QT_USE_QTOPENGL TRUE )
+SET(  QT_USE_QTXML TRUE )
+
+# INCLUDE( ${QT_USE_FILE} ) FIND_PACKAGE( Qt COMPONENTS QtOpenGL opengl QtGui core REQUIRED )
+
+FILE ( GLOB SOURCES ./*.cpp ./EXP/*.cpp ./MISC/*.cpp ./WORLD/*.cpp ./RENDERING/*.cpp) #  
+FILE ( GLOB HEADERS ./*.h ./EXP/*.h ./MISC/*.h ./WORLD/*.h ./RENDERING/*.h ) #
+FILE ( GLOB UIS ./*.ui  )  #
+
+add_definitions(${Qt5Widgets_DEFINITIONS})
+set(CMAKE_CXX_FLAGS "${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+
+QT5_WRAP_CPP( SOURCES ${HEADERS} )
+QT5_WRAP_UI( SOURCES  ${UIS} )
+
+
+INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH} /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/OpenGL.framework/Headers /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AGL.framework/Headers /usr/local/include/ /usr/local/lib/ /usr/local/Cellar/bullet/2.86.1_1/include/bullet/ /usr/X11R6/include/ ${QT_QTOPENGL_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR} /Users/eliotuci/Qt/5.9.1/clang_64/include/ /Users/eliotuci/Qt/5.9.1/ios/include/QtXml/ )
+
+
+# To add c++11 support
+if (MSVC) # MSVC compiler (Win32 only)
+        # Display more warnings
+        SET (CMAKE_CXX_FLAGS "/W3")
+elseif (UNIX OR CMAKE_COMPILER_IS_GNUCXX) # Clang OR Gcc (Linux, Mac OS or Win32 with MingW)
+        # Enable C++11 and displays all warnings
+        SET (CMAKE_CXX_COMPILER mpicxx)
+        SET (CMAKE_CXX_FLAGS " -std=c++11") #  -pthread -lstdc++ 
+        if (APPLE) # Clang / Mac OS only
+                # Required on OSX to compile c++11
+                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ ") # -Xarch_i386 -mmacosx-version-min=10.7
+
+		INCLUDE_DIRECTORIES ( /System/Library/Frameworks )
+   		FIND_LIBRARY(COCOA_LIBRARY Cocoa)
+   		FIND_LIBRARY(GLUT_LIBRARY GLUT )
+   		FIND_LIBRARY(OpenGL_LIBRARY OpenGL )
+   		MARK_AS_ADVANCED (COCOA_LIBRARY
+                     		 GLUT_LIBRARY
+                     		 OpenGL_LIBRARY)
+   	        SET(OpenGL_LIBS ${COCOA_LIBRARY} ${GLUT_LIBRARY} ${OpenGL_LIBRARY})
+        endif(APPLE)
+endif()
+
+ADD_EXECUTABLE( ${EXECUTABLE} ${SOURCES})
+
+TARGET_LINK_LIBRARIES( ${EXECUTABLE}  ${LIBS} ${QGLVIEWER_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} Qt5::Widgets ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${Qt5Widgets_LIBRARIES} ${Qt5Declarative_LIBRARIES} ${Qt5OpenGL_LIBRARIES} Qt5::Core Qt5::Gui  ${GLUT_LIBRARIES}  "-lmpi -lm -lgsl -lgslcblas -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath")
